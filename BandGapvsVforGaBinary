@@ -1,0 +1,102 @@
+import os
+import json
+from pymatgen.ext.matproj import MPRester
+from pymatgen.core.structure import Structure
+import plotly.express as px
+from matplotlib import pyplot as plt
+from pymatgen.core.composition import Composition
+from pymatgen.core.periodic_table import Element
+import numpy as np
+
+current_dir = os.path.join(os.path.dirname(__file__))
+MPR = MPRester("2d5wyVmhDCpPMAkq")
+
+def get_bs_entries():
+    ## Many queries are very large, so this python 
+    # method either queries the MP and saves it in the 'cache' file, 
+    # or if the cache file exists, it loads it directly from the cache. 
+    
+    cache = os.path.join(current_dir, 'ternox_band_gap_data_40')
+    if os.path.exists(cache):
+        print("Loading from cache.")
+        with open(cache, 'r') as f:
+            return json.load(f)
+    else:
+        print("Reading from db.")
+        from pymatgen.ext.matproj import MPRester
+        MPR = MPRester("1778XvD3XxjCRF0Fk")
+        
+        criteria = {'has_bandstructure': {'$eq': True},'elements':{'$all': ['Ga']}, 'nelements':2, 'e_above_hull':{'$lte':0.05}, "band_gap": {'$gt':0.05}}
+        # The criteria uses mongodb query language. See here for more details: https://docs.mongodb.com/manual/reference/operator/query/
+                
+        props = ['structure', "material_id",'pretty_formula','e_above_hull',"warnings","band_gap","band_structure","band_gap.is_direct",'spacegroup.crystal_system']
+        #The properties and the criteria use MaterialsProject features 
+        #You can see what is queryable from the MP API documentation: https://github.com/materialsproject/mapidoc/tree/master/materials 
+        
+        entries = MPR.query(criteria=criteria, properties=props)
+        print(len(entries))
+        
+        #Save files are prepared in a 'JSON' file. 
+        #Some MP objects are not JSONable, and so they must be turned into a dictionary before they can be saved. 
+        new_entries=[]
+        for e in entries:
+            X=e
+            X['structure']=X['structure'].as_dict()
+            new_entries.append(X)
+            
+        with open(cache, 'w') as f:
+            json.dump(new_entries, f)
+        return entries
+        
+        
+entries=get_bs_entries()
+
+print(len(entries))
+
+
+import pandas as pd
+D={'atomic_volume':[],'band_gap':[],'mpid':[],'formula':[],'name':[], 'diff_electroneg':[], 'band_gap.is_direct':[], 'spacegroup.crystal_system':[]}
+
+# Pandas is a generalized Python data storage platform, sort of like Excel. 
+# What we are doing here is creating 'columns' for this dataframe, 
+# And then we are generating the data to put into this column. 
+
+# Some features can be saved directly, such as band_gap. However, other 
+# ones we have to code manually, for example, atomic volume.
+
+for e in entries:
+    comp=Composition(e['pretty_formula'])
+    #If we are doing atomic volume, H-containing oxides have spuriously low volume since they often form OH anions.
+    if Element("H") in comp.elements: continue  
+     
+    s=Structure.from_dict(e['structure'])
+    atomic_volume=s.volume/len(s)
+    
+    D['atomic_volume'].append(atomic_volume)
+    D['band_gap'].append(e['band_gap'])
+    D['mpid'].append(e['material_id'])
+    D['formula'].append(e['pretty_formula'])
+    D['band_gap.is_direct'].append(e['band_gap.is_direct'])
+    D['spacegroup.crystal_system'].append(e['spacegroup.crystal_system'])
+    
+    
+    A=sorted(comp.elements, key=lambda el: el.X)[0] # This sorts the elements by electronegativity and takes the first element
+    B=sorted(comp.elements, key=lambda el: el.X)[1] # Open pymatgen.core.periodic_table to see more Elemental Features
+    D['diff_electroneg'].append(B.X-A.X)
+             
+    
+    
+    name=e['material_id']+': '+e['pretty_formula']
+    D['name'].append(name)
+    
+    
+    
+df = pd.DataFrame(D) 
+
+#Plotly is an interactive data platform so that we can hover over datapoints and explore further. 
+import plotly.express as px
+import plotly
+
+
+fig=px.scatter(df,x="atomic_volume",y="band_gap", color="spacegroup.crystal_system", hover_name='name',size='diff_electroneg')
+plotly.offline.plot(fig, filename='BandGapvsAtomicVolumeForBinaryGa.html')
