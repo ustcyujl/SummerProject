@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function # python3 style print
 
-# Simple model of pi manifold of graphene
 
 from pythtb import * # import TB model class
 import matplotlib.pyplot as plt
@@ -13,7 +12,7 @@ lat=[[1.0,0.0],[0.5,np.sqrt(3.0)/2.0]]
 # define coordinates of orbitals
 orb=[[1./3.,1./3.],[2./3.,2./3.]]
 
-# make 2D tight-binding graphene model
+# make 2D tight-binding model
 my_model=tb_model(2,2,lat,orb)
 
 # set model parameters
