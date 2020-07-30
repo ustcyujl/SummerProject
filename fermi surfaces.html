@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <style>
+            .table{
+                display: table; 
+                border-collapse: collapse;
+                width: 2000px;
+                height: 1000px;
+            }
+            .tr{
+                display: table-row;
+                height: 500px;
+            }
+            .td{
+                display: table-cell;
+                width: 500px;
+                text-align: center;
+                vertical-align: middle;
+                border: solid 1px red;
+                table-layout: fixed;
+            }
+            .table .td img{
+                width: 500px;
+                height: 500px;
+                display:block;
+            }
+            .tr1{
+                display: table-row;
+                height: 100px;
+            }
+        </style>
+    </head>
+    <body>  
+        
+    <div class='table'>
+            <div class='tr1'>
+                <div class='td'>zbAlN fermi surfaces</div>
+                <div class='td'>3.5</div>
+                <div class='td'>4.0</div>
+                <div class='td'>4.5</div>
+                <div class='td'>5.0</div>
+            </div>
+            <!-- 
+           You need to modify the image path by yourself, keep numbers.png because I've placed them in order     
+-->
+            <div class='tr'>
+                <div class='td'>band index 3</div>
+                <div class='td'><img src="~/fermi surface/353.png" alt="" /></div>
+                <div class='td'><img src="~/fermi surface/403.png" alt="" /></div>
+                <div class='td'><img src="~/fermi surface/453.png" alt="" /></div>
+                <div class='td'><img src="~/fermi surface/503.png" alt="" /></div>
+            </div>
+            <div class='tr'>
+                <div class='td'>band index 4</div>
+                <div class='td'><img src="~/fermi surface/354.png" alt="" /></div>
+                <div class='td'><img src="~/fermi surface/404.png" alt="" /></div>
+                <div class='td'><img src="~/fermi surface/454.png" alt="" /></div>
+                <div class='td'><img src="~/fermi surface/504.png" alt="" /></div>
+            </div>
+    </div>
+
+    </body>
+</html>
